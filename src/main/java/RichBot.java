@@ -47,7 +47,6 @@ public class RichBot extends Robot
 	 */
 	public void onHitWall(HitWallEvent e) {
 		// Replace the next line with any behavior you would like
-		back(20);
-		turnRight(20);
+		turnRight(30);
 	}	
 }
