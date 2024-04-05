@@ -7,27 +7,22 @@ public class RichBot extends Robot {
 
     public void run() {
         while (true) {
-		
-			numAliveRobots = getOthers() + 1;
+            numAliveRobots = getOthers() + 1;
             if (inDanger) {
                 // If in danger, move to a safe location
                 moveToSafety();
             } else {
                 // If not in danger, rotate the gun to scan for targets
-				if (numAliveRobots == 1) {
-            		moveToRemainingRobot();
-            		fire(1);
-        		}
-				else
-				{
-					if (numAliveRobots == 1) {
-            			moveToRemainingRobot();
-            			fire(1);
-        			}else
-					{
-			            turnGunRight(30);
-        			}
-				}
+                if (numAliveRobots == 1) {
+                    moveToRemainingRobot();
+                    fire(1);
+                } else {
+                    // Check for 75% chance to move
+                    if (Math.random() <= 0.75) {
+                        moveSlightly(); // Move slightly in a random direction
+                    }
+                    turnGunRight(30);
+                }
             }
         }
     }
@@ -65,6 +60,21 @@ public class RichBot extends Robot {
 
         // Reset the danger flag as we're in a safe position now
         inDanger = false;
+    }
+
+    private void moveSlightly() {
+        // Move slightly in a random direction
+        double distance = 50; // Distance to move
+        double angle = Math.random() * 360; // Random angle to move
+        double newX = getX() + distance * Math.cos(Math.toRadians(angle));
+        double newY = getY() + distance * Math.sin(Math.toRadians(angle));
+
+        // Ensure the new position is within the battlefield boundaries
+        newX = Math.max(Math.min(newX, getBattleFieldWidth() - 20), 20);
+        newY = Math.max(Math.min(newY, getBattleFieldHeight() - 20), 20);
+
+        // Move to the new position
+        goTo(newX, newY);
     }
 
     private void goTo(double x, double y) {
