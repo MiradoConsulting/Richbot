@@ -2,79 +2,55 @@ import robocode.*;
 
 public class RichBot extends Robot {
 
-    boolean inDanger = false; // Flag to indicate if the robot is in danger
-    int numAliveRobots = 0; // Counter to track the number of alive robots
+    boolean movingForward = true; // Flag to track the movement direction
+    boolean turretPointingForward = true; // Flag to track the turret direction
 
     public void run() {
         while (true) {
-            numAliveRobots = getOthers() + 1;
-            if (inDanger) {
-                // If in danger, move to a safe location
-                moveToSafety();
-            } else {
-                // If not in danger, rotate the gun to scan for targets
-                if (numAliveRobots == 1) {
-                    moveToRemainingRobot();
-                    fire(1);
-                } else {
-                    // Check for 75% chance to move
-                    if (Math.random() <= 0.75) {
-                        moveSlightly(); // Move slightly in a random direction
-                    }
-                    turnGunRight(30);
-                }
-            }
+            moveAlongTopWall();
+            alternateTurretDirection();
         }
     }
 
     public void onScannedRobot(ScannedRobotEvent e) {
-        if (!inDanger) {
-            // If not in danger, fire at the scanned robot
+        // Check if there's a robot in the direction the turret is pointing
+        if ((turretPointingForward && e.getBearing() >= 0) || (!turretPointingForward && e.getBearing() < 0)) {
+            // If yes, fire at the scanned robot
             fire(1);
         }
     }
 
-    public void onHitByBullet(HitByBulletEvent e) {
-        // When hit by a bullet, set the flag to indicate danger
-        inDanger = true;
+    private void moveAlongTopWall() {
+        double targetX = getX(); // X coordinate remains the same
+        double targetY;
+
+        // Determine target Y coordinate based on movement direction
+        if (movingForward) {
+            // Move to the top wall
+            targetY = getBattleFieldHeight() - 20;
+        } else {
+            // Move away from the top wall
+            targetY = 100;
+        }
+
+        // Move towards the target position
+        goTo(targetX, targetY);
+
+        // Change direction when reaching the top wall or bottom limit
+        if ((targetY == getBattleFieldHeight() - 20 && getY() == getBattleFieldHeight() - 20) ||
+                (targetY == 100 && getY() == 100)) {
+            movingForward = !movingForward;
+        }
     }
 
-    public void onHitWall(HitWallEvent e) {
-        // When hitting a wall, set the flag to indicate danger
-        inDanger = true;
-    }
-
-    private void moveToSafety() {
-        // Move to a safe location away from the current position
-        double safeDistance = 200; // Distance to move away from current position
-        double angle = Math.random() * 360; // Random angle to move
-        double newX = getX() + safeDistance * Math.cos(Math.toRadians(angle));
-        double newY = getY() + safeDistance * Math.sin(Math.toRadians(angle));
-
-        // Ensure the new position is within the battlefield boundaries
-        newX = Math.max(Math.min(newX, getBattleFieldWidth() - 20), 20);
-        newY = Math.max(Math.min(newY, getBattleFieldHeight() - 20), 20);
-
-        // Move to the new position
-        goTo(newX, newY);
-
-        // Reset the danger flag as we're in a safe position now
-        inDanger = false;
-    }
-
-    private void moveSlightly() {
-        // Move slightly in a random direction
-        double distance = 50; // Distance to move
-        double angle = Math.random() * 360; // Random angle to move
-        double newX = getX() + distance * Math.cos(Math.toRadians(angle));
-        double newY = getY() + distance * Math.sin(Math.toRadians(angle));
-
-        // Ensure the new position is within the battlefield boundaries
-        newX = Math.max(Math.min(newX, getBattleFieldWidth() - 20), 20);
-        newY = Math.max(Math.min(newY, getBattleFieldHeight() - 20), 20);
-
-        // Move to the new position
-        goTo(newX, newY);
+    private void alternateTurretDirection() {
+        // Alternate turret direction between forward and backward
+        if (turretPointingForward) {
+            turnGunRight(180); // Point the turret backward
+        } else {
+            turnGunLeft(180); // Point the turret forward
+        }
+        turretPointingForward = !turretPointingForward; // Update turret direction flag
     }
 
     private void goTo(double x, double y) {
@@ -100,13 +76,5 @@ public class RichBot extends Robot {
             angle -= 360;
         }
         return angle;
-    }
-
-    private void moveToRemainingRobot() {
-        // Move towards the remaining robot
-        double targetX = getBattleFieldWidth() / 2; // Move towards the center
-        double targetY = getBattleFieldHeight() / 2;
-
-        goTo(targetX, targetY);
     }
 }
