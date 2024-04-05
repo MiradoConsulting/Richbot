@@ -17,7 +17,7 @@ public class RichBot extends Robot
                 moveToSafety();
             } else {
                 // If not in danger, rotate the gun to scan for targets
-                turnGunRight(360);
+                turnGunRight(30);
             }
         }
 	}
